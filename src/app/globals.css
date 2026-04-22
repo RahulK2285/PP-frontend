@@ -1,0 +1,160 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════════════════
+   PrepForge — Design System (CSS Custom Properties)
+   Premium dark-themed placement preparation platform
+   ═══════════════════════════════════════════════════════════════ */
+
+@theme {
+  --color-bg-primary: #06060f;
+  --color-bg-secondary: #0c0c1d;
+  --color-bg-card: #0f0f23;
+  --color-bg-card-hover: #141432;
+  --color-bg-surface: #12122a;
+  --color-bg-input: #0e0e20;
+  --color-bg-sidebar: #09091a;
+
+  --color-text-primary: #e8e8f0;
+  --color-text-secondary: #8888a8;
+  --color-text-muted: #555577;
+  --color-text-heading: #f0f0ff;
+
+  --color-purple: #7c3aed;
+  --color-purple-dim: #6d28d9;
+  --color-purple-light: #a78bfa;
+  --color-green: #22c55e;
+  --color-green-dim: #16a34a;
+  --color-pink: #ec4899;
+  --color-pink-dim: #db2777;
+  --color-amber: #f59e0b;
+  --color-amber-dim: #d97706;
+  --color-red: #ef4444;
+  --color-blue: #3b82f6;
+  --color-cyan: #06b6d4;
+
+  --color-border: rgba(255, 255, 255, 0.06);
+  --color-border-light: rgba(255, 255, 255, 0.1);
+
+  --color-hm-0: #161630;
+  --color-hm-1: #2d1b69;
+  --color-hm-2: #5b21b6;
+  --color-hm-3: #7c3aed;
+  --color-hm-4: #a78bfa;
+}
+
+/* ─── Base ─── */
+* { box-sizing: border-box; }
+
+html {
+  font-size: 15px;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+::selection { background: var(--color-purple); color: #fff; }
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(124, 58, 237, 0.3); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(124, 58, 237, 0.5); }
+
+/* ─── Animations ─── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes orbFloat {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(30px, -30px) scale(1.1); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+
+.animate-fade-in { animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+.animate-slide-in { animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+.animate-spin { animation: spin 0.8s linear infinite; }
+.animate-pulse { animation: pulse 2s ease-in-out infinite; }
+
+/* ─── Glass Card Effect ─── */
+.glass-card {
+  background: rgba(15, 15, 35, 0.85);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid var(--color-border-light);
+  border-radius: 12px;
+}
+
+/* ─── Stat Card Gradient Tops ─── */
+.stat-card-purple::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-purple), var(--color-purple-light));
+}
+
+.stat-card-green::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-green), #4ade80);
+}
+
+.stat-card-pink::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-pink), #f472b6);
+}
+
+/* ─── Gradient text ─── */
+.gradient-text {
+  background: linear-gradient(135deg, var(--color-purple), var(--color-pink));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── Recharts overrides for dark theme ─── */
+.recharts-default-tooltip {
+  background: var(--color-bg-card) !important;
+  border: 1px solid var(--color-border-light) !important;
+  border-radius: 8px !important;
+}
+
+.recharts-tooltip-label {
+  color: var(--color-text-heading) !important;
+}
+
+.recharts-cartesian-grid line {
+  stroke: var(--color-border) !important;
+}
