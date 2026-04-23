@@ -11,9 +11,7 @@ interface DSAState {
   error: string | null;
 }
 
-// ─── Thunks ───
 
-// ✅ FIXED HERE
 export const fetchProblems = createAsyncThunk(
   'dsa/fetchProblems',
   async (
