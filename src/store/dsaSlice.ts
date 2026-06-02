@@ -13,23 +13,18 @@ interface DSAState {
 
 export const fetchProblems = createAsyncThunk(
   'dsa/fetchProblems',
-  async (
-    filters: { topic?: string; difficulty?: string; status?: string } = {},
-    { rejectWithValue }
-  ) => {
+  async (filters?: { topic?: string; difficulty?: string; status?: string }, { rejectWithValue }: any) => {
     try {
       const params = new URLSearchParams();
-
-      if (filters.topic) params.set('topic', filters.topic);
-      if (filters.difficulty) params.set('difficulty', filters.difficulty);
-      if (filters.status) params.set('status', filters.status);
-
+      // Safely access properties only if filters object is explicitly passed
+      if (filters?.topic) params.set('topic', filters.topic);
+      if (filters?.difficulty) params.set('difficulty', filters.difficulty);
+      if (filters?.status) params.set('status', filters.status);
+      
       const res = await api.get(`/problems?${params.toString()}`);
       return res.data;
     } catch (err: any) {
-      return rejectWithValue(
-        err.response?.data?.error || 'Failed to fetch problems'
-      );
+      return rejectWithValue(err.response?.data?.error || 'Failed to fetch problems');
     }
   }
 );
