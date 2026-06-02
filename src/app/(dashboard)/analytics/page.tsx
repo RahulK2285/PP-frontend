@@ -18,7 +18,9 @@ export default function AnalyticsPage() {
   const router = useRouter();
   const { analytics } = useSelector((state: RootState) => state.dsa);
 
-  useEffect(() => { dispatch(fetchAnalytics()); }, [dispatch]);
+  useEffect(() => { 
+    dispatch(fetchAnalytics()); 
+  }, [dispatch]);
 
   if (!analytics) {
     return <div className="text-center py-20 text-sm" style={{ color: 'var(--color-text-muted)' }}>Loading analytics...</div>;
@@ -44,12 +46,14 @@ export default function AnalyticsPage() {
     { name: 'Hard', value: analytics.difficultyCounts.Hard, color: '#ef4444' },
   ].filter(d => d.value > 0);
 
-  // Topic pie data (for the distribution chart)
-  const topicPieData = topicData.map((t: { topic: string; solved: number; color: string }) => ({
-    name: t.topic,
-    value: t.solved,
-    color: t.color,
-  })).filter(t => t.value > 0);
+  // Optimized single mapping loop to derive pie structure from existing topic array
+  const topicPieData = topicData
+    .map((t) => ({
+      name: t.topic,
+      value: t.solved,
+      color: t.color,
+    }))
+    .filter(t => t.value > 0);
 
   const maxTopicTotal = Math.max(...topicData.map(t => t.total), 1);
 
@@ -62,7 +66,7 @@ export default function AnalyticsPage() {
       <h1 className="text-xl font-bold tracking-wide mb-6" style={{ color: 'var(--color-text-heading)' }}>◈ ANALYTICS</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {/* Topic Distribution — replaced radar with precise horizontal bar chart */}
+        {/* Topic Distribution */}
         <div className="rounded-xl p-6" style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
           <h2 className="text-xs font-bold tracking-wider mb-5 uppercase" style={{ color: 'var(--color-text-secondary)' }}>
             Topic Distribution <span className="font-normal normal-case text-[10px]">(solved per topic)</span>
@@ -114,7 +118,6 @@ export default function AnalyticsPage() {
                   <Tooltip contentStyle={{ background: '#0f0f23', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#e8e8f0' }} />
                 </PieChart>
               </ResponsiveContainer>
-              {/* Precise difficulty stats below chart */}
               <div className="flex justify-center gap-5 mt-3">
                 {diffData.map(d => (
                   <div key={d.name} className="flex items-center gap-2">
