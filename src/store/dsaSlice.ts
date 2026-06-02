@@ -13,13 +13,14 @@ interface DSAState {
 
 export const fetchProblems = createAsyncThunk(
   'dsa/fetchProblems',
-  async (filters?: { topic?: string; difficulty?: string; status?: string }, { rejectWithValue }: any) => {
+  async (filters: { topic?: string; difficulty?: string; status?: string } = {}, { rejectWithValue }: any) => {
     try {
       const params = new URLSearchParams();
-      // Safely access properties only if filters object is explicitly passed
-      if (filters?.topic) params.set('topic', filters.topic);
-      if (filters?.difficulty) params.set('difficulty', filters.difficulty);
-      if (filters?.status) params.set('status', filters.status);
+      
+      // The default = {} allows this to run safely even when no object is passed
+      if (filters.topic) params.set('topic', filters.topic);
+      if (filters.difficulty) params.set('difficulty', filters.difficulty);
+      if (filters.status) params.set('status', filters.status);
       
       const res = await api.get(`/problems?${params.toString()}`);
       return res.data;
