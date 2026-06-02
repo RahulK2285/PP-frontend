@@ -1,8 +1,6 @@
 'use client';
 
-export const dynamic = "force-dynamic";
-
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import type { AppDispatch, RootState } from '@/store/store';
@@ -27,15 +25,27 @@ function DSATrackerContent() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ title: '', topic: 'Arrays' as Topic, difficulty: 'Medium' as Difficulty, status: 'Todo' as ProblemStatus, url: '', notes: '' });
 
+  // Fetch full problem list once without query restrictions to optimize connection state
   useEffect(() => {
-    dispatch(fetchProblems({ topic: filterTopic, difficulty: filterDifficulty, status: filterStatus }));
-  }, [dispatch, filterTopic, filterDifficulty, filterStatus]);
+    dispatch(fetchProblems());
+  }, [dispatch]);
 
+  // Handle synchronization trigger sequence
   const handleSync = () => {
     dispatch(syncLeetCode()).then(() => {
-      dispatch(fetchProblems({ topic: filterTopic, difficulty: filterDifficulty, status: filterStatus }));
+      dispatch(fetchProblems());
     });
   };
+
+  // Run transactional filter logic directly inside client-side memory layout
+  const filteredProblems = useMemo(() => {
+    return problems.filter((p) => {
+      const matchesTopic = !filterTopic || p.topic === filterTopic;
+      const matchesDifficulty = !filterDifficulty || p.difficulty === filterDifficulty;
+      const matchesStatus = !filterStatus || p.status === filterStatus;
+      return matchesTopic && matchesDifficulty && matchesStatus;
+    });
+  }, [problems, filterTopic, filterDifficulty, filterStatus]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,7 +87,6 @@ function DSATrackerContent() {
     return 'var(--color-text-muted)';
   };
 
-  // Recently solved from sync results
   const recentlySolved = syncResult?.submissions || [];
 
   return (
@@ -152,9 +161,9 @@ function DSATrackerContent() {
       <div className="rounded-xl overflow-hidden mb-5" style={{ background: 'var(--color-bg-card)', border: '1px solid var(--color-border)' }}>
         {loading ? (
           <div className="text-center py-12 text-sm" style={{ color: 'var(--color-text-muted)' }}>Loading...</div>
-        ) : problems.length === 0 ? (
+        ) : filteredProblems.length === 0 ? (
           <div className="text-center py-12" style={{ color: 'var(--color-text-muted)' }}>
-            <p className="text-sm mt-3">No problems yet. Add your first problem or sync with LeetCode!</p>
+            <p className="text-sm mt-3">No matching problems found. Add a problem or adjust your search configurations.</p>
           </div>
         ) : (
           <table className="w-full border-collapse">
@@ -166,7 +175,7 @@ function DSATrackerContent() {
               </tr>
             </thead>
             <tbody>
-              {problems.map((p) => {
+              {filteredProblems.map((p) => {
                 const dc = difficultyColor(p.difficulty);
                 return (
                   <tr key={p._id} className="transition-colors duration-200" style={{ borderBottom: '1px solid var(--color-border)' }}
@@ -314,7 +323,6 @@ function DSATrackerContent() {
   );
 }
 
-// Suspense wrapper to fix useSearchParams() SSR issue
 export default function DSATrackerPage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
