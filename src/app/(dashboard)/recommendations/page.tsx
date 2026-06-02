@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import api from '@/lib/axios';
 import type { Recommendation } from '@/types';
-import { ArrowRight, ExternalLink, ChevronDown, ChevronUp, Filter } from 'lucide-react';
+import { ArrowRight, ExternalLink, ChevronDown, ChevronUp, Filter, AlertTriangle } from 'lucide-react';
 
 import { Suspense } from 'react';
 
@@ -61,14 +61,12 @@ function RecommendationsContent() {
 
     setExpandedTopic(topic);
 
-    // Fetch expanded recommendations with ?topic= filter to get 10 suggestions
     try {
       const res = await api.get(`/recommendations?topic=${encodeURIComponent(topic)}`);
       if (res.data.length > 0) {
         setExpandedData(res.data[0]);
       }
     } catch {
-      // Fallback to existing data
       const existing = recommendations.find(r => r.topic === topic);
       if (existing) setExpandedData(existing);
     }
@@ -82,7 +80,7 @@ function RecommendationsContent() {
     <div>
       <h1 className="text-xl font-bold tracking-wide mb-1" style={{ color: 'var(--color-text-heading)' }}>◈ RECOMMENDATIONS</h1>
       <p className="text-sm mb-6" style={{ color: 'var(--color-text-secondary)' }}>
-        Personalized suggestions based on your weak areas. <span style={{ color: 'var(--color-text-muted)' }}>Click a topic card to see 10+ practice problems.</span>
+        Personalized suggestions based on weighted difficulty index and recency analytics. <span style={{ color: 'var(--color-text-muted)' }}>Click a card to see extended suggestions.</span>
       </p>
 
       {recommendations.length === 0 ? (
@@ -96,6 +94,10 @@ function RecommendationsContent() {
             const isExpanded = expandedTopic === rec.topic;
             const displayRec = isExpanded && expandedData ? expandedData : rec;
 
+            // Check if score was penalized by knowledge fade logic
+            const rawEstimatedPct = Math.min(Math.round((rec.solved / rec.target) * 100), 100);
+            const isDecayed = rec.percentage < rawEstimatedPct && rec.solved > 0;
+
             return (
               <div key={rec.topic}
                 className={`relative overflow-hidden rounded-xl transition-all duration-300 cursor-pointer ${isExpanded ? 'md:col-span-2 lg:col-span-3 shadow-lg' : 'hover:-translate-y-0.5 hover:shadow-lg'}`}
@@ -105,7 +107,6 @@ function RecommendationsContent() {
                 }}
                 onClick={() => handleCardClick(rec.topic)}
               >
-                {/* Top gradient bar */}
                 <div className="absolute top-0 left-0 right-0 h-[3px]" style={{ background: config.gradient }} />
 
                 <div className="p-6">
@@ -115,15 +116,24 @@ function RecommendationsContent() {
                       <span className="text-base font-bold" style={{ color: 'var(--color-text-heading)' }}>{rec.topic}</span>
                       {isExpanded ? <ChevronUp size={16} style={{ color: 'var(--color-text-muted)' }} /> : <ChevronDown size={16} style={{ color: 'var(--color-text-muted)' }} />}
                     </div>
-                    <span className="px-2.5 py-1 rounded-full text-[11px] font-bold" style={{ background: config.bg, color: config.color }}>
-                      {config.label}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      {isDecayed && (
+                        <span className="flex items-center text-red-400" title="Score reduced due to inactivity (Knowledge Fade)">
+                          <AlertTriangle size={14} />
+                        </span>
+                      )}
+                      <span className="px-2.5 py-1 rounded-full text-[11px] font-bold" style={{ background: config.bg, color: config.color }}>
+                        {config.label}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Stats */}
                   <div className="flex gap-4 text-sm mb-3.5" style={{ color: 'var(--color-text-secondary)' }}>
                     <span>{rec.solved}/{rec.target} solved</span>
-                    <span>{rec.percentage}%</span>
+                    <span className="flex items-center gap-1">
+                      {rec.percentage}% Index
+                    </span>
                     {isExpanded && <span style={{ color: 'var(--color-text-muted)' }}>· {displayRec.suggestions.length} problems to practice</span>}
                   </div>
 
@@ -152,7 +162,7 @@ function RecommendationsContent() {
                               className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-md transition-all duration-200 opacity-60 hover:opacity-100 shrink-0"
                               style={{ color: 'var(--color-purple)', background: 'rgba(124,58,237,0.1)' }}>
                               <ExternalLink size={12} />
-                              Solve on LeetCode
+                              Solve
                             </a>
                           )}
                         </div>
@@ -163,16 +173,18 @@ function RecommendationsContent() {
                   {/* Expanded footer */}
                   {isExpanded && (
                     <div className="flex items-center justify-between mt-5 pt-4" style={{ borderTop: '1px solid var(--color-border)' }}>
-                      <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                        {rec.target - rec.solved > 0
-                          ? `You need ${rec.target - rec.solved} more problems to be strong in ${rec.topic}`
-                          : `Great job! You're strong in ${rec.topic}!`}
+                      <div className="text-xs max-w-[60%]" style={{ color: 'var(--color-text-muted)' }}>
+                        {isDecayed 
+                          ? "Review old answers to counter knowledge decay parameters." 
+                          : rec.target - rec.solved > 0
+                            ? `Requires roughly ${rec.target - rec.solved} more Medium/Hard problems to master.`
+                            : `Target metrics achieved for ${rec.topic}!`}
                       </div>
                       <button
                         onClick={(e) => { e.stopPropagation(); handleViewAllProblems(rec.topic); }}
                         className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold cursor-pointer transition-all duration-200"
                         style={{ background: 'linear-gradient(135deg, var(--color-purple), var(--color-purple-dim))', color: '#fff' }}>
-                        <Filter size={12} /> View All {rec.topic} Problems <ArrowRight size={14} />
+                        <Filter size={12} /> View Tracker <ArrowRight size={14} />
                       </button>
                     </div>
                   )}
@@ -180,7 +192,7 @@ function RecommendationsContent() {
                   {/* Collapsed hint */}
                   {!isExpanded && rec.suggestions.length > 3 && (
                     <div className="flex items-center gap-1 mt-2 text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
-                      <ChevronDown size={11} /> Click to see {rec.suggestions.length - 3}+ more problems
+                      <ChevronDown size={11} /> Click card to reveal {rec.suggestions.length - 3}+ deeper options
                     </div>
                   )}
                 </div>
